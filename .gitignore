@@ -57,4 +57,4 @@ typings/
 # dotenv environment variables file
 
 # Project files
-config.js
+#config.js
