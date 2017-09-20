@@ -15,7 +15,6 @@ bot.telegram.getMe().then((bot_informations) => {
 bot.command('start', (ctx) => ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno'));
 
 bot.command('/lesto', (ctx) => {
-    try{
     request('https://unimeal-baa88.firebaseapp.com/menu2.txt', function (error, response, body) {
         if (!error && response.statusCode == 200) {
             var m = moment().utcOffset(0);
@@ -25,16 +24,12 @@ bot.command('/lesto', (ctx) => {
             var today = res[todayString];
             var message = "Il menu lesto 🐰 di oggi è:\nPrimo: " +  today[0] + "\nSecondo: " + today[1] + "\nContorno: " + today[2];
             console.log("served a lesto");
-            return ctx.reply(message);
+            return ctx.reply(message).catch((err) => console.log(err));
         }
     });
-}catch(err){
-    console.log("ERROR:\n" + err);
-}
 });
 
 bot.command('/menu', (ctx) => {
-    try{
     request('https://unimeal-baa88.firebaseapp.com/menu1.txt', function (error, response, body) {
         if (!error && response.statusCode == 200) {
             var m = moment().utcOffset(0);
@@ -50,15 +45,16 @@ bot.command('/menu', (ctx) => {
 
             console.log("served an intero");
 
-            return ctx.reply(message);
+            return ctx.reply(message).catch((err) => console.log(err));
         }
     });
-}catch(err){
-    console.log("ERROR:\n" + err);
-}
 });
 
+const app = new Telegraf(process.env.BOT_TOKEN)
 
+app.catch((err) => {
+  console.log('Ooops', err)
+})
 
 
 bot.startPolling();
