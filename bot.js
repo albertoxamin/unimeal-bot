@@ -23,7 +23,7 @@ bot.command('/lesto', (ctx) => {
             var res = JSON.parse(body);
             var today = res[todayString];
             var message = "Il menu lesto 🐰 di oggi è:\nPrimo: " +  today[0] + "\nSecondo: " + today[1] + "\nContorno: " + today[2];
-
+            console.log("served a lesto");
             return ctx.reply(message);
         }
     });
@@ -42,6 +42,8 @@ bot.command('/menu', (ctx) => {
             today.forEach(function(element) {
                 message += "\n🍲 " +element;
             }, this);
+
+            console.log("served an intero");
 
             return ctx.reply(message);
         }
