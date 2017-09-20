@@ -1,7 +1,9 @@
 const Telegraf = require('telegraf');
 const config = require('./config'); // Holds Telegram API token plus YouTube API token
+var request = require('request');
+var moment = require('moment');
 
-var youtube = require('./models/youtube');  // Provides easy access to YouTube API
+// var youtube = require('./models/youtube');  // Provides easy access to YouTube API
 
 const bot = new Telegraf(config.telegraf_token);
 
@@ -10,37 +12,43 @@ bot.telegram.getMe().then((bot_informations) => {
     console.log("Server has initialized bot nickname. Nick: "+bot_informations.username);
 });
 
-// Usage: @yourbot channel. Retrieves: a list of last videos of 'channel' query input.
-bot.on('inline_query', ctx => {
-    let nickname = ctx.update.inline_query.query;  // Take the nickname out of Telegraf context structure.
-    if(nickname.length > 3){  // If user input is longer than 3 characters
-        // Search channel based on nickname. If there is one with same user query, let's retrieve its channel ID.
-        youtube.get_id_from_nickname(nickname).then(channel_id => {
-            // Let's get last uploaded videos as data structure through YouTube API (thanks to our written model).
-            youtube.fetch_channel_uploads(channel_id).then(structured_data => {
-                // Let's parse those structured data to get only essential informations for video listing.
-                youtube.parse_list_videos(structured_data).then(video_info => {
-                    // Let's encapsulate those informations in a list that Telegraf API can digest.
-                    let new_arr = [];
-                    // For each video, extract retrieved informations for extra elaborations.
-                    for(let k in video_info){
-                        new_arr[k] = {
-                            type: 'video',
-                            id: k,
-                            title: video_info[k].title,
-                            description: video_info[k].description,
-                            video_url: video_info[k].url,
-                            mime_type: "video/mp4",
-                            thumb_url: video_info[k].thumb,
-                            input_message_content: {message_text: "[BOT] "+video_info[k].url}
-                        }
-                    }
-                    // Let's show this list to the user. Cache time is set to zero for development purposes.
-                    return ctx.answerInlineQuery(new_arr, {cache_time: 0});
-                }).catch(error => {console.log("Promise error: "+error)});
-            }).catch(error => {console.log("Promise error: "+error)});
-        }).catch(error => {console.log("Promise error: "+error)});
-    }
+bot.command('start', (ctx) => ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno'));
+
+bot.command('/lesto', (ctx) => {
+    request('https://unimeal-baa88.firebaseapp.com/menu2.txt', function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var m = moment().utcOffset(0);
+            m.set({hour:0,minute:0,second:0,millisecond:0})
+            var todayString =m.unix().toString() + "000";
+            var res = JSON.parse(body);
+            var today = res[todayString];
+            var message = "Il menu lesto 🐰 di oggi è:\nPrimo: " +  today[0] + "\nSecondo: " + today[1] + "\nContorno: " + today[2];
+
+            return ctx.reply(message);
+        }
+    });
 });
+
+bot.command('/menu', (ctx) => {
+    request('https://unimeal-baa88.firebaseapp.com/menu1.txt', function (error, response, body) {
+        if (!error && response.statusCode == 200) {
+            var m = moment().utcOffset(0);
+            m.set({hour:0,minute:0,second:0,millisecond:0})
+            var todayString =m.unix().toString() + "000";
+            var res = JSON.parse(body);
+            var today = res[todayString];
+            var message = "Nel menu intero oggi puoi scegliere";
+
+            today.forEach(function(element) {
+                message += "\n🍲 " +element;
+            }, this);
+
+            return ctx.reply(message);
+        }
+    });
+});
+
+
+
 
 bot.startPolling();
