@@ -15,6 +15,7 @@ bot.telegram.getMe().then((bot_informations) => {
 bot.command('start', (ctx) => ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno'));
 
 bot.command('/lesto', (ctx) => {
+    try{
     request('https://unimeal-baa88.firebaseapp.com/menu2.txt', function (error, response, body) {
         if (!error && response.statusCode == 200) {
             var m = moment().utcOffset(0);
@@ -27,9 +28,13 @@ bot.command('/lesto', (ctx) => {
             return ctx.reply(message);
         }
     });
+}catch(err){
+    console.log("ERROR:\n" + err);
+}
 });
 
 bot.command('/menu', (ctx) => {
+    try{
     request('https://unimeal-baa88.firebaseapp.com/menu1.txt', function (error, response, body) {
         if (!error && response.statusCode == 200) {
             var m = moment().utcOffset(0);
@@ -48,6 +53,9 @@ bot.command('/menu', (ctx) => {
             return ctx.reply(message);
         }
     });
+}catch(err){
+    console.log("ERROR:\n" + err);
+}
 });
 
 
