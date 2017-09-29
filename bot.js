@@ -40,7 +40,7 @@ bot.command('/lesto', (ctx) => {
             }else{
                 message = "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
             }
-            console.log("served a lesto");
+            logAction(ctx,"served a lesto");
             return ctx.reply(message).catch((err) => {console.log(err);return null;});
         }
     });
@@ -65,7 +65,7 @@ bot.command('/menu', (ctx) => {
                     message += "\n🍲 " +element;
                 }, this);
     
-                console.log("served an intero");
+                logAction(ctx,"served an intero");
     
                 return ctx.reply(message).catch((err) => {console.log(err);return null;});
             }
@@ -78,7 +78,7 @@ bot.command('/menu', (ctx) => {
         }, this);
         }
     
-        console.log("served an intero");
+        logAction(ctx,"served an intero");
     
         return ctx.reply(message).catch((err) => {console.log(err);return null;});
     }
@@ -92,6 +92,38 @@ bot.on('sticker', (ctx) => {
 });
 
 bot.hears('ping', (ctx)=>ctx.reply('pong'));
+
+bot.command('/euthanize', (ctx)=>{
+    return ctx.reply("Sei proprio sicuro di voler disattivare l'AI in questo server?");
+});
+
+var echoChatID;
+var masterID;
+
+bot.hears('deeznuts', (ctx)=>{
+    echoChatID = ctx.chat.id;
+    return ctx.reply('ha got him!');
+});
+
+bot.hears('I am your master', (ctx)=>{
+    if (masterID == undefined)
+        masterID = ctx.chat.id;
+    return ctx.reply('I hail you');
+});
+
+bot.command('/say', (ctx)=>{
+    if (ctx.chat.id == masterID){
+        var msg = ctx.message.text.toString();
+        telegram.sendMessage(echoChatID, msg.replace('/say', ''), null);
+    }
+});
+
+function logAction(ctx, actionMessage){
+    if (ctx.message.chat.type == "group")
+        console.log(actionMessage + " on group " + ctx.chat.title)
+    else
+        console.log(actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
+}
 
 bot.catch((err) => {
   console.log('Ooops', err);
