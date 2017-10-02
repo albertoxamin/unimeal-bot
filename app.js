@@ -16,6 +16,7 @@ fs.readdir('./models', function(err, models) {
         console.log('[DEBUG] Model ' + model + ' loaded.');
     });
     console.log("[INFO] Models loaded successfully!");
+
+    require('./bot');
 });
 
-require('./bot');
