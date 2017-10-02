@@ -9,8 +9,8 @@ This is the code powering @unimeal-bot.
 Black magic
 
 ## tl;dr?
-Once you cloned the repository: `git clone https://github.com/Finalgalaxy/yt-search-bot`,
-you need to enter into project dir: `cd yt-search-bot`
+Once you cloned the repository: ``,
+you need to enter into project dir: `cd unimeal-bot`
 and type `npm install` to install all dependencies.
 
 Create a `config.js` file in the root of this project with the following info:

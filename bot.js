@@ -3,6 +3,8 @@ const { Telegram } = require('telegraf')
 const config = require('./config'); // Holds Telegram API token plus YouTube API token
 var request = require('request');
 var moment = require('moment');
+var mongoose = require('mongoose');
+var Chat = mongoose.model('Chat');
 
 const bot = new Telegraf(config.telegraf_token);
 
@@ -116,6 +118,26 @@ bot.command('/say', (ctx)=>{
         var msg = ctx.message.text.toString();
         telegram.sendMessage(echoChatID, msg.replace('/say', ''), null);
     }
+});
+
+bot.on('text',(ctx) => {
+    Chat.find({chatID:ctx.chat.id}, function (err, chat){
+        if (err){
+            console.log(err);
+            return;
+        }
+        if (chat){
+            return;
+        }else{
+            let newChat = new Chat();
+            newChat.chatId = ctx.chat.id
+            newChat.save(function (err, obj){
+                if (err)
+                    console.log(err);
+                return;
+            });
+        }
+    });
 });
 
 function logAction(ctx, actionMessage){

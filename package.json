@@ -10,17 +10,19 @@
     "promise": "^8.0.1",
     "request": "^2.81.0",
     "telegraf": "^3.8.0",
-    "moment": "2.18.1"
+    "moment": "2.18.1",
+    "mongoose": "4.11.14",
+    "lodash": "4.17.4"
   },
   "devDependencies": {},
   "repository": {
     "type": "git",
-    "url": "git+https://github.com/Finalgalaxy/youtube-fetch-BE.git"
+    "url": "git@https://github.com/albertoxamin/unimeal-bot.git"
   },
-  "author": "Finalgalaxy",
+  "author": "albertoxamin",
   "license": "MIT",
   "bugs": {
-    "url": "https://github.com/Finalgalaxy/youtube-fetch-BE/issues"
+    "url": "https://github.com/albertoxamin/unimeal-bot/issues"
   },
-  "homepage": "https://github.com/Finalgalaxy/youtube-fetch-BE#readme"
+  "homepage": "http://xamin.it"
 }
