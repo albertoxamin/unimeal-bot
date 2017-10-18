@@ -1,6 +1,6 @@
 const Telegraf = require('telegraf');
 const { Telegram } = require('telegraf')
-const config = require('./config'); // Holds Telegram API token plus YouTube API token
+const config = require('./config');
 var request = require('request');
 var moment = require('moment');
 var mongoose = require('mongoose');
@@ -142,9 +142,9 @@ bot.on('text',(ctx) => {
 
 function logAction(ctx, actionMessage){
     if (ctx.message.chat.type == "group")
-        console.log(actionMessage + " on group " + ctx.chat.title)
+        console.log(moment().format() +  " " + actionMessage + " on group " + ctx.chat.title)
     else
-        console.log(actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
+        console.log(moment().format() +  " " + actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
 }
 
 bot.catch((err) => {
