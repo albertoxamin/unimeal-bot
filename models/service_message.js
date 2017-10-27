@@ -12,4 +12,4 @@ ServiceMessage.methods = {
 
 };
 
-mongoose.model('ServiceMessage', ServiceMessage);
+mongoose.model('ServiceMessage', ServiceMessage, 'servicemessages');

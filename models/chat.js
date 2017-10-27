@@ -4,7 +4,7 @@ var Schema = mongoose.Schema;
 var ObjectId = Schema.ObjectId;
 
 var Chat = new Schema({
-    chatId: String,
+    chatId: {type:String,unique:true},
     name: String,
     subLesto : Boolean,
     subMenu : Boolean,
@@ -15,4 +15,4 @@ Chat.methods = {
 
 };
 
-mongoose.model('Chat', Chat);
+mongoose.model('Chat', Chat, 'chats');

@@ -1,5 +1,5 @@
 const Telegraf = require('telegraf');
-const { Telegram } = require('telegraf')
+const { Telegram, Markup } = require('telegraf')
 const config = require('./config');
 var request = require('request');
 var moment = require('moment');
@@ -99,41 +99,47 @@ function serveLesto(ctx){
 }
 
 bot.on('sticker', (ctx) => {
-    // console.log(ctx.chat);
-    telegram.sendSticker(ctx.chat.id,'CAADBAADkwUAAqVv9AapiPdrGAeddAI');
-    
-    return ctx.reply("Non sono programmato per comprendere gli sticker :(");
+    if (ctx.message.chat.type != "group"){
+        telegram.sendSticker(ctx.chat.id,'CAADBAADkwUAAqVv9AapiPdrGAeddAI');
+        return ctx.reply("Non sono programmato per comprendere gli sticker :(");
+    }
+    return;
 });
 
 bot.hears('ping', (ctx)=>ctx.reply('pong'));
 
-bot.command('/euthanize', (ctx)=>{
-    return ctx.reply("Sei proprio sicuro di voler disattivare l'AI in questo server?");
-});
+bot.command('/notifiche', (ctx)=>{
 
-var echoChatID;
-var masterID;
-
-bot.hears('deeznuts', (ctx)=>{
-    echoChatID = ctx.chat.id;
-    return ctx.reply('ha got him!');
-});
-
-bot.hears('I am your master', (ctx)=>{
-    if (masterID == undefined)
-        masterID = ctx.chat.id;
-    return ctx.reply('I hail you');
+    // return
 });
 
 bot.command('/say', (ctx)=>{
-    if (ctx.chat.id == masterID){
+    if (ctx.message.chat.username == 'albertoxamin'){
         var msg = ctx.message.text.toString();
-        telegram.sendMessage(echoChatID, msg.replace('/say', ''), null);
+
+        Chat.find({}, function (err, chat){
+            if (err){
+                console.log(err);
+                return;
+            }
+            if (chat){
+                chat.forEach((element) => {
+                    telegram.sendMessage(element.chatId, msg.replace('/say', ''), null);
+                }, this);
+            }else{
+                return ctx.reply("errore");
+            }
+        });
     }
 });
 
-bot.on('text',(ctx) => {
-    Chat.find({chatID:ctx.chat.id}, function (err, chat){
+function logAction(ctx, actionMessage){
+    if (ctx.message.chat.type == "group")
+        console.log(moment().format() +  " " + actionMessage + " on group " + ctx.chat.title)
+    else{
+        console.log(moment().format() +  " " + actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
+    }
+    Chat.findOne({chatID:ctx.chat.id}, function (err, chat){
         if (err){
             console.log(err);
             return;
@@ -150,13 +156,6 @@ bot.on('text',(ctx) => {
             });
         }
     });
-});
-
-function logAction(ctx, actionMessage){
-    if (ctx.message.chat.type == "group")
-        console.log(moment().format() +  " " + actionMessage + " on group " + ctx.chat.title)
-    else
-        console.log(moment().format() +  " " + actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
 }
 
 bot.catch((err) => {
