@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var _ = require('lodash');
 var fs = require('fs');
 
-mongoose.connect('mongodb://51.15.199.193/unimealbot', { useMongoClient: true, promiseLibrary: global.Promise });
+mongoose.connect('mongodb://alberto:supersecurepassword@51.15.199.193:27017/admin?readPreference=primary', { useMongoClient: true, promiseLibrary: global.Promise });
 
 fs.readdir('./models', function(err, models) {
     if (err) {
