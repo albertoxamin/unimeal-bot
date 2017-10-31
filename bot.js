@@ -16,7 +16,10 @@ bot.telegram.getMe().then((bot_informations) => {
     console.log("Server has initialized bot nickname. Nick: " + bot_informations.username);
 });
 
-bot.command('start', (ctx) => ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno'));
+bot.command('start', (ctx) => {
+    logAction(ctx, 'Started bot');
+    return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno')
+});
 
 var todayString = "";
 var todayMenu, todayLesto;
