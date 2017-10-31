@@ -200,7 +200,7 @@ bot.catch((err) => {
     console.log('Ooops', err);
 });
 
-var lesti = schedule.scheduleJob('10 * * *', function () {
+var lesti = schedule.scheduleJob('0 10 * * *', function () {
     updateMenu(() => {
         Chat.find({ subLesto: true }, (err, chats) => {
             if (err) {
@@ -217,7 +217,7 @@ var lesti = schedule.scheduleJob('10 * * *', function () {
     });
 });
 
-var interi = schedule.scheduleJob('9 * * *', function () {
+var interi = schedule.scheduleJob('0 9 * * *', function () {
     updateMenu(() => {
         Chat.find({ subMenu: true }, (err, chats) => {
             if (err) {
