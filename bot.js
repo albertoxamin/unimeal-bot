@@ -18,7 +18,7 @@ bot.telegram.getMe().then((bot_informations) => {
 
 bot.command('start', (ctx) => {
     logAction(ctx, 'Started bot');
-    return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno')
+    return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\nIn caso di problemi con il bot contattate @albertoxamin')
 });
 
 var todayString = "";
@@ -126,24 +126,27 @@ const replyOptions = Markup.inlineKeyboard([
 bot.on('callback_query', (ctx) => {
     console.log(ctx.callbackQuery);
     if (ctx.callbackQuery.data.indexOf('not_') != -1) {
-        Chat.findOne({ chatId: ctx.callbackQuery.from.id.toString() }, function (err, chat) {
+        Chat.findOne({ chatId: ctx.callbackQuery.message.chat.id.toString() }, function (err, chat) {
             if (err) {
                 console.log(err);
                 return;
             }
             if (chat) {
                 if (ctx.callbackQuery.data == 'not_lesto')
-                    chat.subLesto = !chat.subLesto || true;
+                    chat.subLesto = !(chat.subLesto);
                 else if (ctx.callbackQuery.data == 'not_menu')
-                    chat.subMenu = !chat.subMenu || true;
+                    chat.subMenu = !(chat.subMenu);
                 chat.save(function (err, obj) {
                     if (err) {
                         console.log('Error: ' + err);
                     }
-                    telegram.sendMessage(ctx.callbackQuery.from.id, 'Adesso riceverai le notifiche ogni giorno!', null);
+                    //TODO: notificare l'utente delle notifiche che riceve es: a cosa e' iscritto
+                    telegram.sendMessage(obj.chatId, 'Impostazioni attuali di notifica:\nLesto:'+(obj.subLesto?'✅':'❌')+'\nIntero:' + (obj.subMenu?'✅':'❌'), null);
                     return;
                 });
                 return;
+            }else{
+                console.log('ERROR: chat is null on the db');
             }
         });
     }
@@ -151,7 +154,7 @@ bot.on('callback_query', (ctx) => {
 
 bot.command('/notifiche', (ctx) => {
     logAction(ctx, 'Setting notifications ')
-    return ctx.reply('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere', replyOptions);
+    return ctx.reply('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
 });
 
 bot.command('/say', (ctx) => {
@@ -176,7 +179,7 @@ bot.command('/say', (ctx) => {
 
 function logAction(ctx, actionMessage) {
     if (ctx.message.chat.type == "group")
-        console.log(moment().format() + " " + actionMessage + " on group " + ctx.chat.title)
+        console.log(moment().format() + " " + actionMessage + " on " + ctx.chat.id + " aka group " + ctx.chat.title)
     else {
         console.log(moment().format() + " " + actionMessage + " on " + ctx.chat.id + " aka @" + ctx.message.chat.username);
     }
@@ -190,6 +193,8 @@ function logAction(ctx, actionMessage) {
         } else {
             let newChat = new Chat();
             newChat.chatId = ctx.chat.id
+            newChat.subLesto = false;
+            newChat.subMenu = false;
             newChat.save(function (err, obj) {
                 if (err)
                     console.log(err);
