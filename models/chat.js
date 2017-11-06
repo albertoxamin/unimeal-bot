@@ -8,7 +8,8 @@ var Chat = new Schema({
     name: String,
     subLesto : Boolean,
     subMenu : Boolean,
-    serviceMessages:[ObjectId]
+    serviceMessages:[ObjectId],
+    isBotBlocked: Boolean
 });
 
 Chat.methods = {

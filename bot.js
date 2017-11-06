@@ -177,6 +177,30 @@ bot.command('/say', (ctx) => {
     }
 });
 
+bot.command('/stop', (ctx) => {
+    console.log('stopped by ' + ctx.message.chat.username);
+    Chat.findOne({ chatId: ctx.message.chat.id.toString() }, function (err, chat) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (chat) {
+            chat.subLesto = false;
+            chat.subMenu = false;
+            chat.isBotBlocked = true;
+            chat.save(function (err, obj) {
+                if (err) {
+                    console.log('Error: ' + err);
+                }
+                return;
+            });
+            return;
+        }else{
+            console.log('ERROR: chat is null on the db');
+        }
+    });
+});
+
 function logAction(ctx, actionMessage) {
     if (ctx.message.chat.type == "group")
         console.log(moment().format() + " " + actionMessage + " on " + ctx.chat.id + " aka group " + ctx.chat.title)
@@ -189,6 +213,15 @@ function logAction(ctx, actionMessage) {
             return;
         }
         if (chat) {
+            if (chat.isBotBlocked){
+                chat.isBotBlocked = false;
+                chat.save(function (err, obj) {
+                    if (err) {
+                        console.log('Error: ' + err);
+                    }
+                    return;
+                });
+            }
             return;
         } else {
             let newChat = new Chat();
