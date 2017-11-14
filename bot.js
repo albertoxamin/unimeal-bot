@@ -110,8 +110,23 @@ function serveLesto(ctx, chatId) {
 
 bot.on('sticker', (ctx) => {
     if (ctx.message.chat.type != "group") {
-        telegram.sendSticker(ctx.chat.id, 'CAADBAADkwUAAqVv9AapiPdrGAeddAI');
-        return ctx.reply("Non sono programmato per comprendere gli sticker :(");
+
+        Chat.findOne({ chatId: ctx.chat.id.toString() }, function (err, chat) {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            if (chat) {
+                if (chat.stopSticker != true)
+                {
+                    telegram.sendSticker(ctx.chat.id, 'CAADBAADkwUAAqVv9AapiPdrGAeddAI');
+                    return ctx.reply("Non sono programmato per comprendere gli sticker :(");
+                }
+                return;
+            }else{
+                console.log('ERROR: chat is null on the db');
+            }
+        });
     }
     return;
 });
@@ -157,6 +172,7 @@ bot.command('/notifiche', (ctx) => {
     return ctx.reply('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
 });
 
+
 bot.command('/say', (ctx) => {
     if (ctx.message.chat.username == 'albertoxamin') {
         var msg = ctx.message.text.toString();
@@ -175,6 +191,27 @@ bot.command('/say', (ctx) => {
             }
         });
     }
+});
+
+bot.command('/nosticker', (ctx) => {
+    Chat.findOne({ chatId: ctx.message.chat.id.toString() }, function (err, chat) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (chat) {
+            chat.stopSticker = true;
+            chat.save(function (err, obj) {
+                if (err) {
+                    console.log('Error: ' + err);
+                }
+                return;
+            });
+            return;
+        }else{
+            console.log('ERROR: chat is null on the db');
+        }
+    });
 });
 
 bot.command('/stop', (ctx) => {
