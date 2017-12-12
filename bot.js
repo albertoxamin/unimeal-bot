@@ -74,7 +74,7 @@ bot.command('/menu', (ctx) => {
 });
 
 function serveIntero(ctx, chatId) {
-    var message = "Nel menu intero oggi puoi scegliere";
+    var message = "Nel menu **intero** oggi puoi scegliere";
     if (todayMenu) {
         todayMenu.forEach(function (element) {
             message += "\n🍲 " + element;
@@ -82,7 +82,7 @@ function serveIntero(ctx, chatId) {
     }
     if (ctx) {
         logAction(ctx, "served an intero");
-        return ctx.reply(message).catch((err) => { console.log(err); return null; });
+        return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
     } else {
         telegram.sendMessage(chatId, message, null);
     }
@@ -91,9 +91,9 @@ function serveIntero(ctx, chatId) {
 function serveLesto(ctx, chatId) {
     var message = "";
     if (todayLesto != undefined && todayLesto.length == 3)
-        message = "Il menu lesto 🐰 di oggi è:\nPrimo: " + todayLesto[0] + "\nSecondo: " + todayLesto[1] + "\nContorno: " + todayLesto[2];
+        message = "Il menu **lesto** 🐰 di oggi è:\nPrimo: " + todayLesto[0] + "\nSecondo: " + todayLesto[1] + "\nContorno: " + todayLesto[2];
     else if (todayLesto != undefined && todayLesto.length > 0) {
-        message = "Il menu lesto 🐰 di oggi è:";
+        message = "Il menu **lesto** 🐰 di oggi è:";
         todayLesto.forEach(function (element) {
             message += "\n🍲 " + element;
         }, this);
@@ -102,7 +102,7 @@ function serveLesto(ctx, chatId) {
     }
     if (ctx) {
         logAction(ctx, "served a lesto");
-        return ctx.reply(message).catch((err) => { console.log(err); return null; });
+        return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
     } else {
         telegram.sendMessage(chatId, message, null);
     }
@@ -117,13 +117,12 @@ bot.on('sticker', (ctx) => {
                 return;
             }
             if (chat) {
-                if (chat.stopSticker != true)
-                {
+                if (chat.stopSticker != true) {
                     telegram.sendSticker(ctx.chat.id, 'CAADBAADkwUAAqVv9AapiPdrGAeddAI');
                     return ctx.reply("Non sono programmato per comprendere gli sticker :(");
                 }
                 return;
-            }else{
+            } else {
                 console.log('ERROR: chat is null on the db');
             }
         });
@@ -156,11 +155,11 @@ bot.on('callback_query', (ctx) => {
                         console.log('Error: ' + err);
                     }
                     //TODO: notificare l'utente delle notifiche che riceve es: a cosa e' iscritto
-                    telegram.sendMessage(obj.chatId, 'Impostazioni attuali di notifica:\nLesto:'+(obj.subLesto?'✅':'❌')+'\nIntero:' + (obj.subMenu?'✅':'❌'), null);
+                    telegram.sendMessage(obj.chatId, 'Impostazioni attuali di notifica:\nLesto:' + (obj.subLesto ? '✅' : '❌') + '\nIntero:' + (obj.subMenu ? '✅' : '❌'), null);
                     return;
                 });
                 return;
-            }else{
+            } else {
                 console.log('ERROR: chat is null on the db');
             }
         });
@@ -169,9 +168,14 @@ bot.on('callback_query', (ctx) => {
 
 bot.command('/notifiche', (ctx) => {
     logAction(ctx, 'Setting notifications ')
-    return ctx.reply('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
+    return ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
 });
 
+bot.command('/status', (ctx)=>{
+    Chat.count({}, (err, c) => {
+        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti');    
+   });
+});
 
 bot.command('/say', (ctx) => {
     if (ctx.message.chat.username == 'albertoxamin') {
@@ -208,7 +212,7 @@ bot.command('/nosticker', (ctx) => {
                 return;
             });
             return;
-        }else{
+        } else {
             console.log('ERROR: chat is null on the db');
         }
     });
@@ -232,7 +236,7 @@ bot.command('/stop', (ctx) => {
                 return;
             });
             return;
-        }else{
+        } else {
             console.log('ERROR: chat is null on the db');
         }
     });
@@ -250,7 +254,7 @@ function logAction(ctx, actionMessage) {
             return;
         }
         if (chat) {
-            if (chat.isBotBlocked){
+            if (chat.isBotBlocked) {
                 chat.isBotBlocked = false;
                 chat.save(function (err, obj) {
                     if (err) {
@@ -280,18 +284,20 @@ bot.catch((err) => {
 
 var lesti = schedule.scheduleJob('0 10 * * *', function () {
     updateMenu(() => {
-        Chat.find({ subLesto: true }, (err, chats) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            if (chats) {
-                chats.forEach((chat) => {
-                    serveLesto(null, chat.chatId);
-                })
-                return;
-            }
-        });
+        if (todayLesto) {
+            Chat.find({ subLesto: true }, (err, chats) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                if (chats) {
+                    chats.forEach((chat) => {
+                        serveLesto(null, chat.chatId);
+                    })
+                    return;
+                }
+            });
+        }
     });
 });
 
