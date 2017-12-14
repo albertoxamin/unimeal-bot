@@ -74,7 +74,7 @@ bot.command('/menu', (ctx) => {
 });
 
 function serveIntero(ctx, chatId) {
-    var message = "Nel menu **intero** oggi puoi scegliere";
+    var message = "Nel menu *intero* oggi puoi scegliere";
     if (todayMenu) {
         todayMenu.forEach(function (element) {
             message += "\n🍲 " + element;
@@ -84,16 +84,17 @@ function serveIntero(ctx, chatId) {
         logAction(ctx, "served an intero");
         return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
     } else {
-        telegram.sendMessage(chatId, message, null);
+        telegram.sendMessage(chatId, message, Object.assign({ 'parse_mode': 'Markdown' }));
     }
 }
+
 
 function serveLesto(ctx, chatId) {
     var message = "";
     if (todayLesto != undefined && todayLesto.length == 3)
-        message = "Il menu **lesto** 🐰 di oggi è:\nPrimo: " + todayLesto[0] + "\nSecondo: " + todayLesto[1] + "\nContorno: " + todayLesto[2];
+        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + todayLesto[0] + "`\nSecondo: `" + todayLesto[1] + "`\nContorno: `" + todayLesto[2]+"`";
     else if (todayLesto != undefined && todayLesto.length > 0) {
-        message = "Il menu **lesto** 🐰 di oggi è:";
+        message = "Il menu *lesto* 🐰 di oggi è:";
         todayLesto.forEach(function (element) {
             message += "\n🍲 " + element;
         }, this);
@@ -104,7 +105,7 @@ function serveLesto(ctx, chatId) {
         logAction(ctx, "served a lesto");
         return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
     } else {
-        telegram.sendMessage(chatId, message, null);
+        telegram.sendMessage(chatId, message, Object.assign({ 'parse_mode': 'Markdown' }));
     }
 }
 
