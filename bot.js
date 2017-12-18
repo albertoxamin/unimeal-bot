@@ -28,12 +28,15 @@ function updateMenu(cb) {
     var m = moment().utcOffset(0);
     m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
     var todayString = m.unix().toString() + "000";
-    request('https://unimeal-baa88.firebaseapp.com/menu1.txt', function (error, response, body) {
+    
+    request({url:'https://unimeal-baa88.firebaseapp.com/menu1.txt',json:true}, function (error, response, body) {
         if (!error && response.statusCode == 200) {
+            body = body.trim();
             var res = JSON.parse(body);
             todayMenu = res[todayString];
-            request('https://unimeal-baa88.firebaseapp.com/menu2.txt', function (error, response, body) {
+            request({url:'https://unimeal-baa88.firebaseapp.com/menu2.txt',json:true}, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
+                    body = body.trim();
                     res = JSON.parse(body);
                     todayLesto = res[todayString];
                     cb();
