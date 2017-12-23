@@ -47,6 +47,8 @@ function updateMenu(cb) {
 }
 
 bot.command('/lesto', (ctx) => {
+    if (config.holiday)
+        return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
     var m = moment().utcOffset(0);
     m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
     var todayUnix = m.unix().toString() + "000";
@@ -62,6 +64,8 @@ bot.command('/lesto', (ctx) => {
 });
 
 bot.command('/menu', (ctx) => {
+    if (config.holiday)
+        return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
     var m = moment().utcOffset(0);
     m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
     var todayUnix = m.unix().toString() + "000";
@@ -177,7 +181,7 @@ bot.command('/notifiche', (ctx) => {
 
 bot.command('/status', (ctx)=>{
     Chat.count({}, (err, c) => {
-        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti');    
+        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza:*'+config.holiday+"*");    
    });
 });
 
@@ -287,6 +291,8 @@ bot.catch((err) => {
 });
 
 var lesti = schedule.scheduleJob('0 10 * * *', function () {
+    if (config.holiday)
+        return;
     updateMenu(() => {
         if (todayLesto) {
             Chat.find({ subLesto: true }, (err, chats) => {
@@ -306,6 +312,8 @@ var lesti = schedule.scheduleJob('0 10 * * *', function () {
 });
 
 var interi = schedule.scheduleJob('0 9 * * *', function () {
+    if (config.holiday)
+        return;
     updateMenu(() => {
         Chat.find({ subMenu: true }, (err, chats) => {
             if (err) {
