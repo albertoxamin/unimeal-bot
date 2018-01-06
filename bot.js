@@ -28,13 +28,13 @@ function updateMenu(cb) {
     var m = moment().utcOffset(0);
     m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
     var todayString = m.unix().toString() + "000";
-    
-    request({url:'https://unimeal-baa88.firebaseapp.com/menu1.txt',json:true}, function (error, response, body) {
+
+    request({ url: 'https://unimeal-baa88.firebaseapp.com/menu1.txt', json: true }, function (error, response, body) {
         if (!error && response.statusCode == 200) {
             body = body.trim();
             var res = JSON.parse(body);
             todayMenu = res[todayString];
-            request({url:'https://unimeal-baa88.firebaseapp.com/menu2.txt',json:true}, function (error, response, body) {
+            request({ url: 'https://unimeal-baa88.firebaseapp.com/menu2.txt', json: true }, function (error, response, body) {
                 if (!error && response.statusCode == 200) {
                     body = body.trim();
                     res = JSON.parse(body);
@@ -86,6 +86,8 @@ function serveIntero(ctx, chatId) {
         todayMenu.forEach(function (element) {
             message += "\n🍲 " + element;
         }, this);
+    } else {
+        message = "Nessuno menu oggi";
     }
     if (ctx) {
         logAction(ctx, "served an intero");
@@ -99,7 +101,7 @@ function serveIntero(ctx, chatId) {
 function serveLesto(ctx, chatId) {
     var message = "";
     if (todayLesto != undefined && todayLesto.length == 3)
-        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + todayLesto[0] + "`\nSecondo: `" + todayLesto[1] + "`\nContorno: `" + todayLesto[2]+"`";
+        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + todayLesto[0] + "`\nSecondo: `" + todayLesto[1] + "`\nContorno: `" + todayLesto[2] + "`";
     else if (todayLesto != undefined && todayLesto.length > 0) {
         message = "Il menu *lesto* 🐰 di oggi è:";
         todayLesto.forEach(function (element) {
@@ -179,10 +181,10 @@ bot.command('/notifiche', (ctx) => {
     return ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
 });
 
-bot.command('/status', (ctx)=>{
+bot.command('/status', (ctx) => {
     Chat.count({}, (err, c) => {
-        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza:*'+config.holiday+"*");    
-   });
+        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza:*' + config.holiday + "*");
+    });
 });
 
 bot.command('/say', (ctx) => {
@@ -315,18 +317,20 @@ var interi = schedule.scheduleJob('0 9 * * *', function () {
     if (config.holiday)
         return;
     updateMenu(() => {
-        Chat.find({ subMenu: true }, (err, chats) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            if (chats) {
-                chats.forEach((chat) => {
-                    serveIntero(null, chat.chatId);
-                })
-                return;
-            }
-        });
+        if (todayLesto) {
+            Chat.find({ subMenu: true }, (err, chats) => {
+                if (err) {
+                    console.log(err);
+                    return;
+                }
+                if (chats) {
+                    chats.forEach((chat) => {
+                        serveIntero(null, chat.chatId);
+                    })
+                    return;
+                }
+            });
+        }
     });
 });
 
