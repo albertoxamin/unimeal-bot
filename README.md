@@ -5,11 +5,8 @@ This project is a Node.js Telegraf (Telegram) bot to access the menu of the univ
 
 This is the code powering @unimeal-bot.
 
-## How it works?
-Black magic
-
-## tl;dr?
-Once you cloned the repository: ``,
+## Set-up
+Once you cloned the repository:
 you need to enter into project dir: `cd unimeal-bot`
 and type `npm install` to install all dependencies.
 
