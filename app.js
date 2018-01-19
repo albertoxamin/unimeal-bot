@@ -2,7 +2,7 @@ var mongoose = require('mongoose');
 var _ = require('lodash');
 var fs = require('fs');
 
-mongoose.connect('mongodb://unibot:vivalamensa@51.15.199.193:27017/unimeal_bot?readPreference=primary', { useMongoClient: true, promiseLibrary: global.Promise });
+mongoose.connect(config.db_connection, { useMongoClient: true, promiseLibrary: global.Promise });
 
 fs.readdir('./models', function(err, models) {
     if (err) {
