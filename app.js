@@ -1,6 +1,7 @@
-var mongoose = require('mongoose');
-var _ = require('lodash');
-var fs = require('fs');
+const mongoose = require('mongoose');
+const _ = require('lodash');
+const fs = require('fs');
+const config = require('./config');
 
 mongoose.connect(config.db_connection, { useMongoClient: true, promiseLibrary: global.Promise });
 

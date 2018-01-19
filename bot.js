@@ -1,15 +1,15 @@
 const Telegraf = require('telegraf');
 const { Telegram, Markup, Router } = require('telegraf')
 const config = require('./config');
-var request = require('request');
-var moment = require('moment');
-var mongoose = require('mongoose');
-var Chat = mongoose.model('Chat');
-var schedule = require('node-schedule');
+const request = require('request');
+const moment = require('moment');
+const mongoose = require('mongoose');
+const Chat = mongoose.model('Chat');
+const schedule = require('node-schedule');
 
 const bot = new Telegraf(config.telegraf_token);
 
-var telegram = new Telegram(config.telegraf_token, null)
+const telegram = new Telegram(config.telegraf_token, null)
 
 bot.telegram.getMe().then((bot_informations) => {
     bot.options.username = bot_informations.username;
@@ -164,7 +164,6 @@ bot.on('callback_query', (ctx) => {
                     if (err) {
                         console.log('Error: ' + err);
                     }
-                    //TODO: notificare l'utente delle notifiche che riceve es: a cosa e' iscritto
                     telegram.sendMessage(obj.chatId, 'Impostazioni attuali di notifica:\nLesto:' + (obj.subLesto ? '✅' : '❌') + '\nIntero:' + (obj.subMenu ? '✅' : '❌'), null);
                     return;
                 });
