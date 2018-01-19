@@ -1,15 +1,13 @@
-const Telegraf = require('telegraf');
-const { Telegram, Markup, Router } = require('telegraf')
-const config = require('./config');
-const request = require('request');
-const moment = require('moment');
-const mongoose = require('mongoose');
-const Chat = mongoose.model('Chat');
-const schedule = require('node-schedule');
-
-const bot = new Telegraf(config.telegraf_token);
-
-const telegram = new Telegram(config.telegraf_token, null)
+var Telegraf = require('telegraf');
+var { Telegram, Markup, Router } = require('telegraf')
+var config = require('./config');
+var request = require('request');
+var moment = require('moment');
+var mongoose = require('mongoose');
+var Chat = mongoose.model('Chat');
+var schedule = require('node-schedule');
+var bot = new Telegraf(config.telegraf_token);
+var telegram = new Telegram(config.telegraf_token, null)
 
 bot.telegram.getMe().then((bot_informations) => {
     bot.options.username = bot_informations.username;

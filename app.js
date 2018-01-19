@@ -1,4 +1,4 @@
-const mongoose = require('mongoose');
+var mongoose = require('mongoose');
 const _ = require('lodash');
 const fs = require('fs');
 const config = require('./config');
