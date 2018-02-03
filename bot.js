@@ -1,6 +1,12 @@
 var Telegraf = require('telegraf');
 var { Telegram, Markup, Router } = require('telegraf')
-var config = require('./config');
+var config;
+try { config = require('./config') } catch(err){
+    config = {
+        telegraf_token: process.env.TOKEN,
+        holiday: process.env.HOLIDAY
+    }
+}
 var request = require('request');
 var moment = require('moment');
 var mongoose = require('mongoose');
