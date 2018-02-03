@@ -1,4 +1,6 @@
 # Unimeal bot (unimeal-bot)
+[![](https://images.microbadger.com/badges/version/albertoxamin/unimeal-bot.svg)](https://microbadger.com/images/albertoxamin/unimeal-bot)
+[![](https://images.microbadger.com/badges/image/albertoxamin/unimeal-bot.svg)](https://microbadger.com/images/albertoxamin/unimeal-bot)
 
 ## What is this repository about?
 This project is a Node.js Telegraf (Telegram) bot to access the menu of the university canteen managed by Opera Universitaria.
