@@ -27,7 +27,7 @@ Once you've set up your API key, just type:
 ## Docker
 For easier deployment you can also use the docker image
 
-```
+```shell
 docker pull albertoxamin/unimeal-bot
 docker run -it -e "TOKEN=YOUR_TELEGRAM_API_KEY" \
     -e "DB_CONNECTION=your_mongodb_connection_string" \
