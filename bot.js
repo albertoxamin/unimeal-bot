@@ -44,6 +44,52 @@ function updateMenu(cb) {
     });
 }
 
+let PDFParser = require("pdf2json");
+let pdfParser = new PDFParser();
+pdfParser.on("pdfParser_dataError", errData => console.error(errData.parserError));
+pdfParser.on("pdfParser_dataReady", pdfData => {
+    parseMenu(pdfData.formImage.Pages[0].Texts);
+    parseMenu(pdfData.formImage.Pages[1].Texts);
+    parseMenu(pdfData.formImage.Pages[2].Texts);
+    parseMenu(pdfData.formImage.Pages[3].Texts);
+});
+var _ctx;
+bot.command('/updatemenu', (ctx) => {
+    _ctx = ctx;
+    pdfParser.loadPDF('./menu.pdf');
+});
+
+var parseMenu = function(texts){
+    let days = []
+    try {
+        let j = 0, prev = 0;
+        texts.forEach((el, i) => {
+            let str = decodeURI(el.R[0].T).trim().replace('%2C','').replace('*','');
+            if (str === 'LEGENDA')
+                throw 'shit';
+            if (i > 10 && str.length>6 && str !== 'KCAL' && isNaN(str)) {
+                if (prev === i - 1){
+                    let m = days[Math.floor(j / 5)].menu;
+                    days[Math.floor(j / 5)].menu[m.length-1] += ' ' + str;
+                    return;                    
+                }
+                if(days[Math.floor(j / 5)])
+                    days[Math.floor(j / 5)].menu.push(str);
+                else
+                    days.push({menu : [str]});
+
+                // menu[].dish[j - Math.floor(j / 5) * 5] = str;
+                j++;
+                prev = i;
+            }
+        });
+        
+    } catch (e) {
+        if (e !== 'shit') throw e;
+    }
+    _ctx.reply(JSON.stringify(days,null,'\t'));
+}
+
 bot.command('/lesto', (ctx) => {
     if (config.holiday)
         return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
