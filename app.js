@@ -24,4 +24,3 @@ fs.readdir('./models', function (err, models) {
 
     require('./bot');
 });
-

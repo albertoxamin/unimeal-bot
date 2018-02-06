@@ -50,7 +50,7 @@ function updateMenu(cb) {
     });
 }
 
-bot.command('/lesto', (ctx) => {
+bot.command(['lesto', 'menu'], (ctx) => {
     if (config.holiday)
         return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
     var m = moment().utcOffset(0);
@@ -60,62 +60,28 @@ bot.command('/lesto', (ctx) => {
     if (todayUnix != todayString || todayMenu == undefined) {
         todayString = todayUnix;
         updateMenu(() => {
-            serveLesto(ctx);
+            serveMenu(ctx, null, ctx.message.text.replace('/',''));
         });
     } else {
-        serveLesto(ctx);
+        serveMenu(ctx,null, ctx.message.text.replace('/',''));
     }
 });
 
-bot.command('/menu', (ctx) => {
-    if (config.holiday)
-        return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
-    var m = moment().utcOffset(0);
-    m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-    var todayUnix = m.unix().toString() + "000";
-
-    if (todayUnix != todayString || todayMenu == undefined) {
-        todayString = todayUnix;
-        updateMenu(() => {
-            serveIntero(ctx);
-        });
-    } else {
-        serveIntero(ctx);
-    }
-});
-
-function serveIntero(ctx, chatId) {
-    var message = "Nel menu *intero* oggi puoi scegliere";
-    if (todayMenu) {
-        todayMenu.forEach(function (element) {
+function serveMenu(ctx, chatId, kind) {
+    let message = "";
+    let selected = (kind == 'lesto')?todayLesto:todayMenu;
+    if (selected != undefined && selected.length == 3)
+        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + selected[0] + "`\nSecondo: `" + selected[1] + "`\nContorno: `" + selected[2] + "`";
+    else if (selected != undefined && selected.length > 0) {
+        message = "Il menu *" + kind + "* di oggi è:";
+        selected.forEach(function (element) {
             message += "\n🍲 " + element;
         }, this);
-    } else {
-        message = "Nessuno menu oggi";
-    }
-    if (ctx) {
-        logAction(ctx, "served an intero");
-        return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
-    } else {
-        telegram.sendMessage(chatId, message, Object.assign({ 'parse_mode': 'Markdown' }));
-    }
-}
-
-
-function serveLesto(ctx, chatId) {
-    var message = "";
-    if (todayLesto != undefined && todayLesto.length == 3)
-        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + todayLesto[0] + "`\nSecondo: `" + todayLesto[1] + "`\nContorno: `" + todayLesto[2] + "`";
-    else if (todayLesto != undefined && todayLesto.length > 0) {
-        message = "Il menu *lesto* 🐰 di oggi è:";
-        todayLesto.forEach(function (element) {
-            message += "\n🍲 " + element;
-        }, this);
-    } else {
+    } else if (kind != 'menu') {
         message = "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
     }
     if (ctx) {
-        logAction(ctx, "served a lesto");
+        logAction(ctx, "served a " + kind);
         return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
     } else {
         telegram.sendMessage(chatId, message, Object.assign({ 'parse_mode': 'Markdown' }));
@@ -185,8 +151,10 @@ bot.command('/notifiche', (ctx) => {
 });
 
 bot.command('/status', (ctx) => {
+    // if (mongoose.connection.readyState)
+    //     return ctx.reply('☣️ Impossibile connetersi al db ☣️');
     Chat.count({}, (err, c) => {
-        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza:*' + config.holiday + "*");
+        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza: *' + (config.holiday||'non attivo') + "*");
     });
 });
 
@@ -295,40 +263,22 @@ bot.catch((err) => {
     console.log('Ooops', err);
 });
 
-var lesti = schedule.scheduleJob('0 10 * * *', function () {
+var notifiche = schedule.scheduleJob('30 9 * * *', function () {
     if (config.holiday)
         return;
     updateMenu(() => {
         if (todayLesto) {
-            Chat.find({ subLesto: true }, (err, chats) => {
+            Chat.find({ $or:[ {subMenu:true}, {subLesto:true} ] }, (err, chats) => {
                 if (err) {
                     console.log(err);
                     return;
                 }
                 if (chats) {
                     chats.forEach((chat) => {
-                        serveLesto(null, chat.chatId);
-                    })
-                    return;
-                }
-            });
-        }
-    });
-});
-
-var interi = schedule.scheduleJob('0 9 * * *', function () {
-    if (config.holiday)
-        return;
-    updateMenu(() => {
-        if (todayLesto) {
-            Chat.find({ subMenu: true }, (err, chats) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                if (chats) {
-                    chats.forEach((chat) => {
-                        serveIntero(null, chat.chatId);
+                        if (chat.subLesto)
+                            serveMenu(null, chat.chatId,'lesto');
+                        if (chat.subMenu)
+                            serveMenu(null, chat.chatId,'menu');
                     })
                     return;
                 }
