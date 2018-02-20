@@ -15,9 +15,12 @@ var schedule = require('node-schedule');
 var bot = new Telegraf(config.telegraf_token);
 var telegram = new Telegram(config.telegraf_token, null)
 
+var username;
+
 bot.telegram.getMe().then((bot_informations) => {
     bot.options.username = bot_informations.username;
     console.log("Server has initialized bot nickname. Nick: " + bot_informations.username);
+    username = '@' + bot_informations.username;
 });
 
 bot.command(['start','help'], (ctx) => {
@@ -60,10 +63,10 @@ bot.command(['lesto', 'menu'], (ctx) => {
     if (todayUnix != todayString || todayMenu == undefined) {
         todayString = todayUnix;
         updateMenu(() => {
-            serveMenu(ctx, null, ctx.message.text.replace('/',''));
+            serveMenu(ctx, null, ctx.message.text.replace('/','').replace(username,''));
         });
     } else {
-        serveMenu(ctx,null, ctx.message.text.replace('/',''));
+        serveMenu(ctx,null, ctx.message.text.replace('/','').replace(username,''));
     }
 });
 
