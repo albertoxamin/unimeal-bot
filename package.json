@@ -10,7 +10,7 @@
     "promise": "^8.0.1",
     "request": "^2.81.0",
     "telegraf": "^3.8.0",
-    "moment": "2.18.1",
+    "moment": "~2.21.0",
     "mongoose": "4.11.14",
     "lodash": "4.17.4",
     "node-schedule": "1.2.5"

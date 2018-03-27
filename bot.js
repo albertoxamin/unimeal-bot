@@ -80,7 +80,7 @@ function serveMenu(ctx, chatId, kind) {
         selected.forEach(function (element) {
             message += "\n🍲 " + element;
         }, this);
-    } else if (kind != 'menu') {
+    } else if (kind == 'lesto') {
         message = "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
     }
     if (ctx) {
@@ -281,7 +281,7 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
                         if (chat.subLesto)
                             serveMenu(null, chat.chatId,'lesto');
                         if (chat.subMenu)
-                            serveMenu(null, chat.chatId,'menu');
+                            serveMenu(null, chat.chatId,'intero');
                     })
                     return;
                 }
