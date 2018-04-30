@@ -25,7 +25,7 @@ bot.telegram.getMe().then((bot_informations) => {
 
 bot.command(['start','help'], (ctx) => {
     logAction(ctx, 'Started bot');
-    return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\nIn caso di problemi con il bot contattate @albertoxamin\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot')
+    return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\nIn caso di problemi con il bot contattate @albertoxamin\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot\n\nOppure puoi offrirmi un caffè http://buymeacoff.ee/Xamin')
 });
 
 var todayString = "";
