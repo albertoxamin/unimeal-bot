@@ -1,7 +1,7 @@
 var Telegraf = require('telegraf');
 var { Telegram, Markup, Router } = require('telegraf')
 var config;
-try { config = require('./config') } catch(err){
+try { config = require('./config') } catch (err) {
     config = {
         telegraf_token: process.env.TOKEN,
         holiday: process.env.HOLIDAY
@@ -14,6 +14,7 @@ var Chat = mongoose.model('Chat');
 var schedule = require('node-schedule');
 var bot = new Telegraf(config.telegraf_token);
 var telegram = new Telegram(config.telegraf_token, null)
+const crypto = require('crypto');
 
 var username;
 
@@ -23,7 +24,7 @@ bot.telegram.getMe().then((bot_informations) => {
     username = '@' + bot_informations.username;
 });
 
-bot.command(['start','help'], (ctx) => {
+bot.command(['start', 'help'], (ctx) => {
     logAction(ctx, 'Started bot');
     return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\nIn caso di problemi con il bot contattate @albertoxamin\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot\n\nOppure puoi offrirmi un caffè http://buymeacoff.ee/Xamin')
 });
@@ -63,16 +64,16 @@ bot.command(['lesto', 'menu'], (ctx) => {
     if (todayUnix != todayString || todayMenu == undefined) {
         todayString = todayUnix;
         updateMenu(() => {
-            serveMenu(ctx, null, ctx.message.text.replace('/','').replace(username,''));
+            serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
         });
     } else {
-        serveMenu(ctx,null, ctx.message.text.replace('/','').replace(username,''));
+        serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
     }
 });
 
-function serveMenu(ctx, chatId, kind) {
+const buildMessage = function (kind) {
     let message = "";
-    let selected = (kind == 'lesto')?todayLesto:todayMenu;
+    let selected = (kind == 'lesto') ? todayLesto : todayMenu;
     if (selected != undefined && selected.length == 3)
         message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + selected[0] + "`\nSecondo: `" + selected[1] + "`\nContorno: `" + selected[2] + "`";
     else if (selected != undefined && selected.length > 0) {
@@ -83,6 +84,11 @@ function serveMenu(ctx, chatId, kind) {
     } else if (kind == 'lesto') {
         message = "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
     }
+    return message;
+}
+
+function serveMenu(ctx, chatId, kind) {
+    let message = buildMessage(kind);
     if (ctx) {
         logAction(ctx, "served a " + kind);
         return ctx.replyWithMarkdown(message).catch((err) => { console.log(err); return null; });
@@ -90,6 +96,33 @@ function serveMenu(ctx, chatId, kind) {
         telegram.sendMessage(chatId, message, Object.assign({ 'parse_mode': 'Markdown' }));
     }
 }
+
+bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
+    updateMenu(() => {
+        let lesto = buildMessage('lesto');
+        let menu = buildMessage('menu');
+        let result = [{
+            type: 'article',
+            id: crypto.createHash('md5').update(lesto).digest('hex'),
+            title: "Lesto",
+            description: lesto,
+            input_message_content: {
+                message_text: lesto,
+                parse_mode: 'Markdown'
+            }
+        },{
+            type: 'article',
+            id: crypto.createHash('md5').update(menu).digest('hex'),
+            title: "Menu intero",
+            description: menu,
+            input_message_content: {
+                message_text: menu,
+                parse_mode: 'Markdown'
+            }
+        }];
+        return answerInlineQuery(result)
+    })
+});
 
 bot.on('sticker', (ctx) => {
     if (ctx.message.chat.type != "group") {
@@ -114,11 +147,6 @@ bot.on('sticker', (ctx) => {
 });
 
 bot.hears('ping', (ctx) => ctx.reply('pong'));
-
-const replyOptions = Markup.inlineKeyboard([
-    Markup.callbackButton('Lesto', 'not_lesto'),
-    Markup.callbackButton('Intero', 'not_menu')
-]).extra()
 
 bot.on('callback_query', (ctx) => {
     console.log(ctx.callbackQuery);
@@ -149,15 +177,30 @@ bot.on('callback_query', (ctx) => {
 });
 
 bot.command('/notifiche', (ctx) => {
-    logAction(ctx, 'Setting notifications ')
-    return ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
+    logAction(ctx, 'Setting notifications ');
+
+    Chat.findOne({ chatId: ctx.message.chat.id.toString() }, function (err, chat) {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (chat) {
+            let replyOptions = Markup.inlineKeyboard([
+                Markup.callbackButton(`Lesto ${(chat.subLesto ? '✅' : '❌')}`, 'not_lesto'),
+                Markup.callbackButton(`Intero ${(chat.subMenu ? '✅' : '❌')}`, 'not_menu')
+            ]).extra()
+            return ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', replyOptions);
+        } else {
+            console.log('ERROR: chat is null on the db');
+        }
+    });
 });
 
 bot.command('/status', (ctx) => {
     // if (mongoose.connection.readyState)
     //     return ctx.reply('☣️ Impossibile connetersi al db ☣️');
     Chat.count({}, (err, c) => {
-        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza: *' + (config.holiday||'non attivo') + "*");
+        return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza: *' + (config.holiday || 'non attivo') + "*");
     });
 });
 
@@ -271,7 +314,7 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
         return;
     updateMenu(() => {
         if (todayLesto) {
-            Chat.find({ $or:[ {subMenu:true}, {subLesto:true} ] }, (err, chats) => {
+            Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
                 if (err) {
                     console.log(err);
                     return;
@@ -279,9 +322,9 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
                 if (chats) {
                     chats.forEach((chat) => {
                         if (chat.subLesto)
-                            serveMenu(null, chat.chatId,'lesto');
+                            serveMenu(null, chat.chatId, 'lesto');
                         if (chat.subMenu)
-                            serveMenu(null, chat.chatId,'intero');
+                            serveMenu(null, chat.chatId, 'intero');
                     })
                     return;
                 }
