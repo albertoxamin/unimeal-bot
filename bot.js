@@ -15,13 +15,20 @@ var schedule = require('node-schedule');
 var bot = new Telegraf(config.telegraf_token);
 var telegram = new Telegram(config.telegraf_token, null)
 const crypto = require('crypto');
-
+var firebase = require("firebase");
 var username;
+
+var menus = undefined;
 
 bot.telegram.getMe().then((bot_informations) => {
     bot.options.username = bot_informations.username;
     console.log("Server has initialized bot nickname. Nick: " + bot_informations.username);
     username = '@' + bot_informations.username;
+    firebase.initializeApp(config.firebaseConfig);
+    database = firebase.database().ref().child('menus');
+    database.on('value', snap => {
+        menus = snap.val();
+    })
 });
 
 bot.command(['start', 'help'], (ctx) => {
@@ -29,60 +36,37 @@ bot.command(['start', 'help'], (ctx) => {
     return ctx.reply('Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\nElenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\nIn caso di problemi con il bot contattate @albertoxamin\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot\n\nOppure puoi offrirmi un caffè http://buymeacoff.ee/Xamin')
 });
 
-var todayString = "";
-var todayMenu, todayLesto;
-
-function updateMenu(cb) {
-    var m = moment().utcOffset(0);
-    m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-    var todayString = m.unix().toString() + "000";
-
-    request({ url: 'https://unimeal-baa88.firebaseapp.com/menu1.txt', json: true }, function (error, response, body) {
-        if (!error && response.statusCode == 200) {
-            body = body.trim();
-            var res = JSON.parse(body);
-            todayMenu = res[todayString];
-            request({ url: 'https://unimeal-baa88.firebaseapp.com/menu2.txt', json: true }, function (error, response, body) {
-                if (!error && response.statusCode == 200) {
-                    body = body.trim();
-                    res = JSON.parse(body);
-                    todayLesto = res[todayString];
-                    cb();
-                }
-            });
-        }
-    });
-}
-
 bot.command(['lesto', 'menu'], (ctx) => {
     if (config.holiday)
         return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
-    var m = moment().utcOffset(0);
-    m.set({ hour: 0, minute: 0, second: 0, millisecond: 0 })
-    var todayUnix = m.unix().toString() + "000";
-
-    if (todayUnix != todayString || todayMenu == undefined) {
-        todayString = todayUnix;
-        updateMenu(() => {
-            serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
-        });
-    } else {
-        serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
-    }
+    serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
 });
 
 const buildMessage = function (kind) {
+    let today = menus[new Buffer(moment().format('YYYY-MM-dd')).toString('base64')];
+    if (today == undefined)
+        return "Nessun menu disponibile per oggi.";
     let message = "";
-    let selected = (kind == 'lesto') ? todayLesto : todayMenu;
-    if (selected != undefined && selected.length == 3)
-        message = "Il menu *lesto* 🐰 di oggi è:\nPrimo: `" + selected[0] + "`\nSecondo: `" + selected[1] + "`\nContorno: `" + selected[2] + "`";
-    else if (selected != undefined && selected.length > 0) {
-        message = "Il menu *" + kind + "* di oggi è:";
-        selected.forEach(function (element) {
-            message += "\n🍲 " + element;
+    let selected = (kind == 'lesto') ? today.lesto : today.completo;
+    if (kind == 'lesto' && selected != undefined)
+        return "Il menu *lesto* 🐰 di oggi è:\nPrimo: 🍝 `" + selected.primo[0] + "`\nSecondo: 🥩 `" + selected.secondo[0] + "`\nContorno: 🥦 `" + selected.contorno[0] + "`";
+    else if (kind == 'menu' || kind == 'intero' && selected != undefined) {
+        message = "Il menu *completo* di oggi è:\n";
+        selected.primo.forEach(function (element) {
+            message += "\n🍝 `" + element + "`";
+        }, this);
+        message+='\n';
+        selected.secondo.forEach(function (element) {
+            message += "\n🥩 `" + element + "`";
+        }, this);
+        message+='\n';
+        selected.contorno.forEach(function (element) {
+            message += "\n🥦 `" + element + "`";
         }, this);
     } else if (kind == 'lesto') {
-        message = "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
+        return "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
+    } else {
+        return "Nessun menu disponibile per oggi.";
     }
     return message;
 }
@@ -110,7 +94,7 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
                 message_text: lesto,
                 parse_mode: 'Markdown'
             }
-        },{
+        }, {
             type: 'article',
             id: crypto.createHash('md5').update(menu).digest('hex'),
             title: "Menu intero",
@@ -313,23 +297,21 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
     if (config.holiday)
         return;
     updateMenu(() => {
-        if (todayLesto) {
-            Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
-                if (err) {
-                    console.log(err);
-                    return;
-                }
-                if (chats) {
-                    chats.forEach((chat) => {
-                        if (chat.subLesto)
-                            serveMenu(null, chat.chatId, 'lesto');
-                        if (chat.subMenu)
-                            serveMenu(null, chat.chatId, 'intero');
-                    })
-                    return;
-                }
-            });
-        }
+        Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
+            if (err) {
+                console.log(err);
+                return;
+            }
+            if (chats) {
+                chats.forEach((chat) => {
+                    if (chat.subLesto)
+                        serveMenu(null, chat.chatId, 'lesto');
+                    if (chat.subMenu)
+                        serveMenu(null, chat.chatId, 'intero');
+                })
+                return;
+            }
+        });
     });
 });
 
