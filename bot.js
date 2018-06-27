@@ -43,7 +43,7 @@ bot.command(['lesto', 'menu'], (ctx) => {
 });
 
 const buildMessage = function (kind) {
-    let today = menus[new Buffer(moment().format('YYYY-MM-dd')).toString('base64')];
+    let today = menus[new Buffer(moment().format('YYYY-MM-DD')).toString('base64')];
     if (today == undefined)
         return "Nessun menu disponibile per oggi.";
     let message = "";
