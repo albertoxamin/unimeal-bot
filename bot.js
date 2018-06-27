@@ -55,11 +55,11 @@ const buildMessage = function (kind) {
         selected.primo.forEach(function (element) {
             message += "\n🍝 `" + element + "`";
         }, this);
-        message+='\n';
+        message += '\n';
         selected.secondo.forEach(function (element) {
             message += "\n🥩 `" + element + "`";
         }, this);
-        message+='\n';
+        message += '\n';
         selected.contorno.forEach(function (element) {
             message += "\n🥦 `" + element + "`";
         }, this);
@@ -82,31 +82,30 @@ function serveMenu(ctx, chatId, kind) {
 }
 
 bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
-    updateMenu(() => {
-        let lesto = buildMessage('lesto');
-        let menu = buildMessage('menu');
-        let result = [{
-            type: 'article',
-            id: crypto.createHash('md5').update(lesto).digest('hex'),
-            title: "Lesto",
-            description: lesto,
-            input_message_content: {
-                message_text: lesto,
-                parse_mode: 'Markdown'
-            }
-        }, {
-            type: 'article',
-            id: crypto.createHash('md5').update(menu).digest('hex'),
-            title: "Menu intero",
-            description: menu,
-            input_message_content: {
-                message_text: menu,
-                parse_mode: 'Markdown'
-            }
-        }];
-        return answerInlineQuery(result)
-    })
-});
+    let lesto = buildMessage('lesto');
+    let menu = buildMessage('menu');
+    let result = [{
+        type: 'article',
+        id: crypto.createHash('md5').update(lesto).digest('hex'),
+        title: "Lesto",
+        description: lesto,
+        input_message_content: {
+            message_text: lesto,
+            parse_mode: 'Markdown'
+        }
+    }, {
+        type: 'article',
+        id: crypto.createHash('md5').update(menu).digest('hex'),
+        title: "Menu intero",
+        description: menu,
+        input_message_content: {
+            message_text: menu,
+            parse_mode: 'Markdown'
+        }
+    }];
+    return answerInlineQuery(result)
+}
+);
 
 bot.on('sticker', (ctx) => {
     if (ctx.message.chat.type != "group") {
