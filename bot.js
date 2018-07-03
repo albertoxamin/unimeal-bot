@@ -295,22 +295,20 @@ bot.catch((err) => {
 var notifiche = schedule.scheduleJob('30 9 * * *', function () {
     if (config.holiday)
         return;
-    updateMenu(() => {
-        Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
-            if (err) {
-                console.log(err);
-                return;
-            }
-            if (chats) {
-                chats.forEach((chat) => {
-                    if (chat.subLesto)
-                        serveMenu(null, chat.chatId, 'lesto');
-                    if (chat.subMenu)
-                        serveMenu(null, chat.chatId, 'intero');
-                })
-                return;
-            }
-        });
+    Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
+        if (err) {
+            console.log(err);
+            return;
+        }
+        if (chats) {
+            chats.forEach((chat) => {
+                if (chat.subLesto)
+                    serveMenu(null, chat.chatId, 'lesto');
+                if (chat.subMenu)
+                    serveMenu(null, chat.chatId, 'intero');
+            })
+            return;
+        }
     });
 });
 
