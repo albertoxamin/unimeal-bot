@@ -53,15 +53,18 @@ const buildMessage = function (kind) {
     else if ((kind == 'menu' || kind == 'intero') && selected != undefined && selected.primo[0] != '') {
         message = "Il menu *completo* di oggi è:\n";
         selected.primo.forEach(function (element) {
-            message += "\n🍝 `" + element + "`";
+            if (element != '')
+                message += "\n🍝 `" + element + "`";
         }, this);
         message += '\n';
         selected.secondo.forEach(function (element) {
-            message += "\n🥩 `" + element + "`";
+            if (element != '')
+                message += "\n🥩 `" + element + "`";
         }, this);
         message += '\n';
         selected.contorno.forEach(function (element) {
-            message += "\n🥦 `" + element + "`";
+            if (element != '')
+                message += "\n🥦 `" + element + "`";
         }, this);
     } else if (kind == 'lesto') {
         return "Nessun menu lesto oggi, consulta il menu completo con il comando /menu";
