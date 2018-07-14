@@ -48,9 +48,9 @@ const buildMessage = function (kind) {
         return "Nessun menu disponibile per oggi.";
     let message = "";
     let selected = (kind == 'lesto') ? today.lesto : today.completo;
-    if (kind == 'lesto' && selected != undefined)
+    if (kind == 'lesto' && selected != undefined && selected.primo[0] != '')
         return "Il menu *lesto* 🐰 di oggi è:\nPrimo: 🍝 `" + selected.primo[0] + "`\nSecondo: 🥩 `" + selected.secondo[0] + "`\nContorno: 🥦 `" + selected.contorno[0] + "`";
-    else if (kind == 'menu' || kind == 'intero' && selected != undefined) {
+    else if ((kind == 'menu' || kind == 'intero') && selected != undefined && selected.primo[0] != '') {
         message = "Il menu *completo* di oggi è:\n";
         selected.primo.forEach(function (element) {
             message += "\n🍝 `" + element + "`";
