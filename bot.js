@@ -37,6 +37,7 @@ bot.command(['start', 'help'], (ctx) => {
 });
 
 bot.command(['lesto', 'menu'], (ctx) => {
+    ctx.replyWithChatAction('typing');
     if (config.holiday)
         return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜');
     serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''));
@@ -183,8 +184,7 @@ bot.command('/notifiche', (ctx) => {
 });
 
 bot.command('/status', (ctx) => {
-    // if (mongoose.connection.readyState)
-    //     return ctx.reply('☣️ Impossibile connetersi al db ☣️');
+    ctx.replyWithChatAction('typing');
     Chat.count({}, (err, c) => {
         return ctx.replyWithMarkdown('Il bot ha attualmente `' + c + '` utenti\nPeriodo di vacanza: *' + (config.holiday || 'non attivo') + "*");
     });
