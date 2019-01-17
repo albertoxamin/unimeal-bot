@@ -6,6 +6,7 @@ try { config = require('./config') } catch (err) {
 		telegraf_token: process.env.TOKEN
 	}
 }
+const fs = require('fs')
 const request = require('request')
 const moment = require('moment')
 const mongoose = require('mongoose')
@@ -40,12 +41,16 @@ bot.telegram.getMe().then((bot_informations) => {
 
 bot.command(['start', 'help'], (ctx) => {
 	logAction(ctx, 'Started bot')
-	return ctx.reply(
+	ctx.reply(
 		'Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\n' +
 		'Elenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\n' +
 		'In caso di problemi con il bot contattate @albertoxamin\nBot per gli orari delle biblioteche @bibliotrentobot' +
 		'\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot' +
 		'\n\nOppure puoi offrirmi un caffè http://buymeacoff.ee/Xamin')
+	ctx.replyWithChatAction('upload_document')
+	fs.readFile('./tipi_menu.pdf', (err, data) => {
+		ctx.replyWithDocument({ source: data, filename: 'Tipologie menù.pdf' })
+	})
 })
 
 bot.command(['lesto', 'menu'], (ctx) => {
