@@ -1,4 +1,6 @@
 # Unimeal bot (unimeal-bot)
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falbertoxamin%2Funimeal-bot.svg?type=shield)](https://app.fossa.io/projects/git%2Bgithub.com%2Falbertoxamin%2Funimeal-bot?ref=badge_shield)
+
 [![](https://images.microbadger.com/badges/version/albertoxamin/unimeal-bot.svg)](https://microbadger.com/images/albertoxamin/unimeal-bot)
 [![](https://images.microbadger.com/badges/image/albertoxamin/unimeal-bot.svg)](https://microbadger.com/images/albertoxamin/unimeal-bot)
 
@@ -35,3 +37,7 @@ docker run -it -e "TOKEN=YOUR_TELEGRAM_API_KEY" \
     -e "DB_CONNECTION=your_mongodb_connection_string" \
     --name unimeal albertoxamin/unimeal-bot
 ```
+
+
+## License
+[![FOSSA Status](https://app.fossa.io/api/projects/git%2Bgithub.com%2Falbertoxamin%2Funimeal-bot.svg?type=large)](https://app.fossa.io/projects/git%2Bgithub.com%2Falbertoxamin%2Funimeal-bot?ref=badge_large)
