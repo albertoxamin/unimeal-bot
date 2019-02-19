@@ -72,7 +72,7 @@ const buildMessage = function (kind) {
 		let flatten = (arr, emoji) => {
 			let message = ''
 			arr.forEach((dish) => {
-				if (element != '')
+				if (dish != '')
 					message += `\n${emoji} \`${dish}\``
 			})
 			return message
