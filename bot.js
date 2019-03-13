@@ -28,6 +28,19 @@ const KEYBOARD_NOTIFICATIONS = (chat) => Markup.inlineKeyboard([
 	Markup.callbackButton(`Intero ${(chat.subMenu ? '✅' : '❌')}`, 'not_menu')
 ]).extra()
 
+const getChat = (chatId, callback, notFoundCallback) => {
+	Chat.findOne({ chatId: chatId }, function (err, chat) {
+		if (err) return console.log(err)
+		if (chat) {
+			callback(chat)
+		} else if (notFoundCallback) {
+			notFoundCallback()
+		} else {
+			console.log('ERROR: chat is null on the db')
+		}
+	})
+}
+
 bot.telegram.getMe().then((bot_informations) => {
 	bot.options.username = bot_informations.username
 	console.log('Server has initialized bot nickname. Nick: ' + bot_informations.username)
@@ -124,45 +137,31 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 bot.on('callback_query', (ctx) => {
 	console.log(ctx.callbackQuery)
 	if (ctx.callbackQuery.data.indexOf('not_') != -1) {
-		Chat.findOne({ chatId: ctx.callbackQuery.message.chat.id.toString() }, function (err, chat) {
-			if (err) {
-				console.log(err)
-				return
-			}
-			if (chat) {
-				if (ctx.callbackQuery.data == 'not_lesto')
-					chat.subLesto = !(chat.subLesto)
-				else if (ctx.callbackQuery.data == 'not_menu')
-					chat.subMenu = !(chat.subMenu)
-				chat.save(function (err, obj) {
-					if (err) {
-						console.log('Error: ' + err)
-					}
-					telegram.editMessageText(ctx.callbackQuery.message.chat.id, ctx.callbackQuery.message.message_id, null,
-						'Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)',
-						KEYBOARD_NOTIFICATIONS(obj))
-					ctx.answerCbQuery('Impostazioni aggiornate!')
-				})
-			} else {
-				console.log('ERROR: chat is null on the db')
-			}
+		getChat(ctx.callbackQuery.message.chat.id.toString(), (chat) => {
+			if (ctx.callbackQuery.data == 'not_lesto')
+				chat.subLesto = !(chat.subLesto)
+			else if (ctx.callbackQuery.data == 'not_menu')
+				chat.subMenu = !(chat.subMenu)
+			chat.save(function (err, obj) {
+				if (err) {
+					console.log('Error: ' + err)
+				}
+				telegram.editMessageText(ctx.callbackQuery.message.chat.id, ctx.callbackQuery.message.message_id, null,
+					'Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)',
+					KEYBOARD_NOTIFICATIONS(obj))
+				ctx.answerCbQuery('Impostazioni aggiornate!')
+			})
 		})
 	}
 })
 
 bot.command('notifiche', (ctx) => {
 	logAction(ctx, 'Setting notifications ')
-	Chat.findOne({ chatId: ctx.message.chat.id.toString() }, function (err, chat) {
-		if (err) {
-			console.log(err)
-			return
-		}
-		if (chat) {
-			return ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n(toccando nuovamente il menù non riceverai più le notifiche)', KEYBOARD_NOTIFICATIONS(chat))
-		} else {
-			console.log('ERROR: chat is null on the db')
-		}
-	})
+	getChat(ctx.message.chat.id.toString(),
+		(chat) =>
+			ctx.replyWithMarkdown('Ti invierò un messaggio ogni giorno, scegli il menù che vuoi ricevere\n' +
+				'(toccando nuovamente il menù non riceverai più le notifiche)',
+				KEYBOARD_NOTIFICATIONS(chat)))
 })
 
 bot.command('setholiday', (ctx) => {
@@ -202,23 +201,15 @@ bot.command('say', (ctx) => {
 
 bot.command('stop', (ctx) => {
 	console.log('stopped by ' + ctx.message.chat.username)
-	Chat.findOne({ chatId: ctx.message.chat.id.toString() }, function (err, chat) {
-		if (err) {
-			console.log(err)
-			return
-		}
-		if (chat) {
-			chat.subLesto = false
-			chat.subMenu = false
-			chat.isBotBlocked = true
-			chat.save(function (err, obj) {
-				if (err) {
-					console.log('Error: ' + err)
-				}
-			})
-		} else {
-			console.log('ERROR: chat is null on the db')
-		}
+	getChat(ctx.message.chat.id.toString(), (chat) => {
+		chat.subLesto = false
+		chat.subMenu = false
+		chat.isBotBlocked = true
+		chat.save(function (err, obj) {
+			if (err) {
+				console.log('Error: ' + err)
+			}
+		})
 	})
 })
 
@@ -228,33 +219,27 @@ function logAction(ctx, actionMessage) {
 	else {
 		console.log(moment().format() + ' ' + actionMessage + ' on ' + ctx.chat.id + ' aka @' + ctx.message.chat.username)
 	}
-	Chat.findOne({ chatId: ctx.chat.id }, function (err, chat) {
-		if (err) {
-			console.log(err)
-			return
-		}
-		if (chat) {
-			if (chat.isBotBlocked) {
-				chat.isBotBlocked = false
-				chat.save(function (err, obj) {
-					if (err) {
-						console.log('Error: ' + err)
-					}
-					return
-				})
-			}
-			return
-		} else {
-			let newChat = new Chat()
-			newChat.chatId = ctx.chat.id
-			newChat.subLesto = false
-			newChat.subMenu = false
-			newChat.save(function (err, obj) {
-				if (err)
-					console.log(err)
+	getChat(ctx.chat.id, (chat) => {
+		if (chat.isBotBlocked) {
+			chat.isBotBlocked = false
+			chat.save(function (err, obj) {
+				if (err) {
+					console.log('Error: ' + err)
+				}
 				return
 			})
 		}
+		return
+	}, () => {
+		let newChat = new Chat()
+		newChat.chatId = ctx.chat.id
+		newChat.subLesto = false
+		newChat.subMenu = false
+		newChat.save(function (err, obj) {
+			if (err)
+				console.log(err)
+			return
+		})
 	})
 }
 
