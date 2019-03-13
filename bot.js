@@ -20,8 +20,14 @@ var Chat = mongoose.model('Chat')
 
 var username
 var menus = undefined
+var backupMenu = undefined
 
 const isAdmin = (ctx) => ctx.message.chat.username === 'albertoxamin'
+
+const updateBackupMenu = () => request('https://api-mensa-unitn.herokuapp.com', (err, res, body) => {
+	if (!err && res.statusCode === 200)
+		backupMenu = JSON.parse(body)
+})
 
 const KEYBOARD_NOTIFICATIONS = (chat) => Markup.inlineKeyboard([
 	Markup.callbackButton(`Lesto ${(chat.subLesto ? '✅' : '❌')}`, 'not_lesto'),
@@ -50,6 +56,7 @@ bot.telegram.getMe().then((bot_informations) => {
 	database.on('value', snap => {
 		menus = snap.val()
 	})
+	updateBackupMenu()
 })
 
 bot.command(['start', 'help'], (ctx) => {
@@ -73,12 +80,10 @@ bot.command(['lesto', 'menu'], (ctx) => {
 	serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''))
 })
 
-const buildMessage = function (kind) {
-	let today = menus[new Buffer(moment().format('YYYY-MM-DD')).toString('base64')]
-	if (today == undefined)
-		return 'Nessun menu disponibile per oggi.'
-	let message = ''
+const getMessage = (menuSource, kind) => {
+	let today = menuSource[new Buffer(moment().format('YYYY-MM-DD')).toString('base64')]
 	let selected = (kind == 'lesto') ? today.lesto : today.completo
+	let message = ''
 	if (kind == 'lesto' && selected != undefined && selected.primo[0] != '')
 		return `Il menu *lesto* 🐰 di oggi è:\nPrimo: 🍝 \`${selected.primo[0]}\`\nSecondo: 🥩 \`${selected.secondo[0]}\`\nContorno: 🥦 \`${selected.contorno[0]}\``
 	else if ((kind == 'menu' || kind == 'intero') && selected != undefined && selected.primo[0] != '') {
@@ -91,12 +96,20 @@ const buildMessage = function (kind) {
 			return message
 		}
 		message = `Il menu *completo* di oggi è:\n${flatten(selected.primo, '🍝')}\n${flatten(selected.secondo, '🥩')}\n${flatten(selected.contorno, '🥦')}`
-	} else if (kind == 'lesto') {
-		return 'Nessun menu lesto oggi, consulta il menu completo con il comando /menu'
-	} else {
-		return 'Nessun menu disponibile per oggi.'
 	}
 	return message
+}
+
+const buildMessage = function (kind) {
+	let message = menu ? getMessage(menus, kind) : ''
+	if (message !== '')
+		return message;
+	message = backupMenu ? getMessage(backupMenu, kind) : ''
+	if (message !== '')
+		return message;
+	if (kind == 'lesto')
+		return 'Nessun menu lesto oggi, consulta il menu completo con il comando /menu'
+	return 'Nessun menu disponibile per oggi.'
 }
 
 function serveMenu(ctx, chatId, kind) {
@@ -250,6 +263,7 @@ bot.catch((err) => {
 var notifiche = schedule.scheduleJob('30 9 * * *', function () {
 	if (config.holiday)
 		return
+	updateBackupMenu()
 	Chat.find({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, chats) => {
 		if (err) {
 			console.log(err)
