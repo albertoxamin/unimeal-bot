@@ -30,8 +30,9 @@ const updateBackupMenu = () => request('https://api-mensa-unitn.herokuapp.com', 
 })
 
 const KEYBOARD_NOTIFICATIONS = (chat) => Markup.inlineKeyboard([
-	Markup.callbackButton(`Lesto ${(chat.subLesto ? '✅' : '❌')}`, 'not_lesto'),
-	Markup.callbackButton(`Intero ${(chat.subMenu ? '✅' : '❌')}`, 'not_menu')
+	[Markup.callbackButton(`Lesto ${(chat.subLesto ? '✅' : '❌')}`, 'not_lesto'),
+	Markup.callbackButton(`Intero ${(chat.subMenu ? '✅' : '❌')}`, 'not_menu')],
+	[Markup.callbackButton(`Weekends ${chat.weekend ? '✅' : '❌'}`, 'not_weekend')]
 ]).extra()
 
 const getChat = (chatId, callback, notFoundCallback) => {
@@ -54,6 +55,7 @@ bot.telegram.getMe().then((bot_informations) => {
 	firebase.initializeApp(config.firebaseConfig)
 	database = firebase.database().ref().child('menus')
 	database.on('value', snap => {
+		console.log('Firebase updated!')
 		menus = snap.val()
 	})
 	updateBackupMenu()
@@ -101,7 +103,7 @@ const getMessage = (menuSource, kind) => {
 }
 
 const buildMessage = function (kind) {
-	let message = menu ? getMessage(menus, kind) : ''
+	let message = menus ? getMessage(menus, kind) : ''
 	if (message !== '')
 		return message;
 	message = backupMenu ? getMessage(backupMenu, kind) : ''
@@ -148,13 +150,14 @@ bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
 })
 
 bot.on('callback_query', (ctx) => {
-	console.log(ctx.callbackQuery)
 	if (ctx.callbackQuery.data.indexOf('not_') != -1) {
 		getChat(ctx.callbackQuery.message.chat.id.toString(), (chat) => {
 			if (ctx.callbackQuery.data == 'not_lesto')
 				chat.subLesto = !(chat.subLesto)
 			else if (ctx.callbackQuery.data == 'not_menu')
 				chat.subMenu = !(chat.subMenu)
+			else if (ctx.callbackQuery.data == 'not_weekend')
+				chat.weekend = !(chat.weekend)
 			chat.save(function (err, obj) {
 				if (err) {
 					console.log('Error: ' + err)
@@ -271,12 +274,13 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
 		}
 		if (chats) {
 			chats.forEach((chat) => {
+				if (moment().weekday() > 5 && !(chat.weekend))
+					return
 				if (chat.subLesto)
 					serveMenu(null, chat.chatId, 'lesto')
 				if (chat.subMenu)
 					serveMenu(null, chat.chatId, 'intero')
 			})
-			return
 		}
 	})
 })

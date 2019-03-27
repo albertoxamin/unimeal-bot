@@ -7,7 +7,8 @@ var Chat = new Schema({
     chatId: {type:String,unique:true},
     name: String,
     subLesto : Boolean,
-    subMenu : Boolean,
+	subMenu : Boolean,
+	weekend : Boolean,
     serviceMessages:[ObjectId],
     isBotBlocked: Boolean,
     stopSticker: Boolean
