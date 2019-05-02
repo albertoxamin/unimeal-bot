@@ -20,9 +20,18 @@ module.exports = {
     // API key for Telegram
     telegraf_token:'YOUR_TELEGRAM_API_KEY',
     db_connection:'your_mongodb_connection_string'
+    firebaseConfig : {
+        apiKey: 'YOUR_FIREBASE_API_KEY',
+        authDomain: 'unimeal-8e378.firebaseapp.com',
+        databaseURL: 'https://unimeal-8e378.firebaseio.com',
+        projectId: 'unimeal-8e378',
+        storageBucket: 'unimeal-8e378.appspot.com',
+        messagingSenderId: '648699973887'
+    }
 };
 ```
-For Telegram API key, check https://github.com/Finalgalaxy/telegram-telegraf-bot and follow README instructions about how to create a Telegram Bot.
+
+> The bot should work even without the db_connection and the firebase config
 
 Once you've set up your API key, just type:
 `npm start`
@@ -31,11 +40,9 @@ Once you've set up your API key, just type:
 ## Docker
 For easier deployment you can also use the docker image
 
-```shell
+```bash
 docker pull albertoxamin/unimeal-bot
-docker run -it -e "TOKEN=YOUR_TELEGRAM_API_KEY" \
-    -e "DB_CONNECTION=your_mongodb_connection_string" \
-    --name unimeal albertoxamin/unimeal-bot
+docker run -it -v /path_in_host/config.js:/usr/src/app/config.js --name unimeal albertoxamin/unimeal-bot
 ```
 
 
