@@ -83,7 +83,10 @@ bot.command(['lesto', 'menu'], (ctx) => {
 })
 
 const getMessage = (menuSource, kind) => {
-	let today = menuSource[new Buffer(moment().format('YYYY-MM-DD')).toString('base64')]
+	let index = new Buffer(moment().format('YYYY-MM-DD')).toString('base64')
+	let today = menuSource[index]
+	if (!today) today = backupMenu[index]
+	if (!today) return ''
 	let selected = (kind == 'lesto') ? today.lesto : today.completo
 	let message = ''
 	if (kind == 'lesto' && selected != undefined && selected.primo[0] != '')
