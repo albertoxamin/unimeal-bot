@@ -17,7 +17,7 @@
     "lodash": "^4.17.13",
     "node-schedule": "^1.3.0",
     "firebase": "^5.4.2",
-    "snyk": "^1.191.0"
+    "snyk": "^1.230.5"
   },
   "devDependencies": {},
   "repository": {
