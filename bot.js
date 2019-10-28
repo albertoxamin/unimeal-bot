@@ -29,6 +29,19 @@ const updateBackupMenu = () => request('https://api-mensa-unitn.herokuapp.com', 
 		backupMenu = JSON.parse(body)
 })
 
+const getLastOperaUpdateTime = () => {
+	let mostRecentDate = new Date(0)
+	for (var key in menus) {
+		if (menus.hasOwnProperty(key)) {
+			let decoded = Buffer.from(key, 'base64').toString()
+			let keyDate = moment(decoded, 'YYYY-MM-DD').toDate()
+			if (keyDate > mostRecentDate)
+				mostRecentDate = keyDate
+		}
+	}
+	return `L'ultimo menu caricato dall'opera universitaria è del ${moment(mostRecentDate).format('DD/MM/YYYY')} ovvero ${moment(mostRecentDate).fromNow()}`
+}
+
 const KEYBOARD_NOTIFICATIONS = (chat) => Markup.inlineKeyboard([
 	[Markup.callbackButton(`Lesto ${(chat.subLesto ? '✅' : '❌')}`, 'not_lesto'),
 	Markup.callbackButton(`Intero ${(chat.subMenu ? '✅' : '❌')}`, 'not_menu')],
@@ -113,8 +126,8 @@ const buildMessage = function (kind) {
 	if (message !== '')
 		return message;
 	if (kind == 'lesto')
-		return 'Nessun menu lesto oggi, consulta il menu completo con il comando /menu'
-	return 'Nessun menu disponibile per oggi.'
+		return 'Nessun menu lesto oggi, consulta il menu completo con il comando /menu\n' + getLastOperaUpdateTime()
+	return 'Nessun menu disponibile per oggi.\n' + getLastOperaUpdateTime()
 }
 
 function serveMenu(ctx, chatId, kind) {
