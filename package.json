@@ -4,20 +4,17 @@
   "description": "Node.js Telegraf (Telegram) bot per la mensa trento.",
   "main": "app.js",
   "scripts": {
-    "start": "node app.js",
-    "snyk-protect": "snyk protect",
-    "prepare": "npm run snyk-protect"
+    "start": "node app.js"
   },
   "dependencies": {
-    "promise": "^8.0.1",
+    "promise": "^8.0.3",
     "request": "^2.88.0",
-    "telegraf": "^3.23.0",
-    "moment": "^2.22.2",
-    "mongoose": "^5.7.5",
-    "lodash": "^4.17.13",
-    "node-schedule": "^1.3.0",
-    "firebase": "^5.4.2",
-    "snyk": "^1.230.5"
+    "telegraf": "^3.33.0",
+    "moment": "^2.24.0",
+    "mongoose": "^5.7.7",
+    "lodash": "^4.17.15",
+    "node-schedule": "^1.3.2",
+    "firebase": "^7.2.2"
   },
   "devDependencies": {},
   "repository": {
@@ -29,6 +26,5 @@
   "bugs": {
     "url": "https://github.com/albertoxamin/unimeal-bot/issues"
   },
-  "homepage": "http://xamin.it",
-  "snyk": true
+  "homepage": "http://xamin.it"
 }
