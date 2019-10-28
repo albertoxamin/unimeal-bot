@@ -207,7 +207,7 @@ bot.command('status', (ctx) => {
 	ctx.replyWithChatAction('typing')
 	Chat.countDocuments({}, (err, c) => {
 		Chat.countDocuments({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, not_c) => {
-			return ctx.replyWithMarkdown(`Il bot ha attualmente \`${c}\` utenti, \`${not_c}\` hanno le notifiche attive\nPeriodo di vacanza: *${(config.holiday || 'non attivo')}*`)
+			return ctx.replyWithMarkdown(`Il bot ha attualmente \`${c}\` utenti, \`${not_c}\` hanno le notifiche attive\nPeriodo di vacanza: *${(config.holiday || 'non attivo')}*\n${getLastOperaUpdateTime()}`)
 		})
 	})
 })
