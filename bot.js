@@ -1,5 +1,5 @@
 const Telegraf = require('telegraf')
-const { Telegram, Markup, Router } = require('telegraf')
+const { Telegram, Markup } = require('telegraf')
 var config
 try { config = require('./config') } catch (err) {
 	config = {
@@ -23,6 +23,19 @@ var menus = undefined
 var backupMenu = undefined
 
 const isAdmin = (ctx) => ctx.message.chat.username === 'albertoxamin'
+
+const inline_query_result = (menu, title) => {
+	return {
+		type: 'article',
+		id: crypto.createHash('md5').update(menu).digest('hex'),
+		title: title,
+		description: menu,
+		input_message_content: {
+			message_text: menu,
+			parse_mode: 'Markdown'
+		}
+	}
+}
 
 const updateBackupMenu = () => request('https://api-mensa-unitn.herokuapp.com', (err, res, body) => {
 	if (!err && res.statusCode === 200)
@@ -80,8 +93,7 @@ bot.command(['start', 'help'], (ctx) => {
 		'Benvenuto a unimealbot.\nQuesto bot ti permette di consultare il menù del giorno delle mense universitarie di Trento\n\n' +
 		'Elenco comandi disponibili:\n/lesto pasto lesto del giorno\n/menu menù intero del giorno\n/notifiche\n\n' +
 		'In caso di problemi con il bot contattate @albertoxamin\nBot per gli orari delle biblioteche @bibliotrentobot' +
-		'\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot' +
-		'\n\nOppure puoi offrirmi un caffè http://buymeacoff.ee/Xamin')
+		'\n\nContribuisci allo sviluppo su https://github.com/albertoxamin/unimeal-bot')
 	ctx.replyWithChatAction('upload_document')
 	fs.readFile('./tipi_menu.pdf', (err, data) => {
 		ctx.replyWithDocument({ source: data, filename: 'Tipologie menù.pdf' })
@@ -90,8 +102,6 @@ bot.command(['start', 'help'], (ctx) => {
 
 bot.command(['lesto', 'menu'], (ctx) => {
 	ctx.replyWithChatAction('typing')
-	if (config.holiday)
-		return ctx.reply('Il bot tornerà operativo al riprendere delle lezioni 🔜')
 	serveMenu(ctx, null, ctx.message.text.replace('/', '').replace(username, ''))
 })
 
@@ -108,8 +118,7 @@ const getMessage = (menuSource, kind) => {
 		let flatten = (arr, emoji) => {
 			let message = ''
 			arr.forEach((dish) => {
-				if (dish != '')
-					message += `\n${emoji} \`${dish}\``
+				if (dish != '') message += `\n${emoji} \`${dish}\``
 			})
 			return message
 		}
@@ -118,19 +127,17 @@ const getMessage = (menuSource, kind) => {
 	return message
 }
 
-const buildMessage = function (kind) {
+const buildMessage = (kind) => {
 	let message = menus ? getMessage(menus, kind) : ''
-	if (message !== '')
-		return message;
+	if (message !== '') return message
 	message = backupMenu ? getMessage(backupMenu, kind) : ''
-	if (message !== '')
-		return message;
+	if (message !== '') return message
 	if (kind == 'lesto')
 		return 'Nessun menu lesto oggi, consulta il menu completo con il comando /menu\n' + getLastOperaUpdateTime()
 	return 'Nessun menu disponibile per oggi.\n' + getLastOperaUpdateTime()
 }
 
-function serveMenu(ctx, chatId, kind) {
+const serveMenu = (ctx, chatId, kind) => {
 	let message = buildMessage(kind)
 	if (ctx) {
 		logAction(ctx, 'served a ' + kind)
@@ -141,31 +148,14 @@ function serveMenu(ctx, chatId, kind) {
 }
 
 bot.on('inline_query', async ({ inlineQuery, answerInlineQuery }) => {
-	let lesto = buildMessage('lesto')
-	let menu = buildMessage('menu')
-	let result = [{
-		type: 'article',
-		id: crypto.createHash('md5').update(lesto).digest('hex'),
-		title: 'Lesto',
-		description: lesto,
-		input_message_content: {
-			message_text: lesto,
-			parse_mode: 'Markdown'
-		}
-	}, {
-		type: 'article',
-		id: crypto.createHash('md5').update(menu).digest('hex'),
-		title: 'Menu intero',
-		description: menu,
-		input_message_content: {
-			message_text: menu,
-			parse_mode: 'Markdown'
-		}
-	}]
+	let lesto = inline_query_result('lesto', 'Lesto')
+	let menu = inline_query_result('menu', 'Menu')
+	let result = [lesto, menu]
 	return answerInlineQuery(result)
 })
 
 bot.on('callback_query', (ctx) => {
+	// Questa funzione viene invocata quando un utente preme su un tasto su telegram
 	if (ctx.callbackQuery.data.indexOf('not_') != -1) {
 		getChat(ctx.callbackQuery.message.chat.id.toString(), (chat) => {
 			if (ctx.callbackQuery.data == 'not_lesto')
@@ -196,18 +186,11 @@ bot.command('notifiche', (ctx) => {
 				KEYBOARD_NOTIFICATIONS(chat)))
 })
 
-bot.command('setholiday', (ctx) => {
-	if (isAdmin(ctx)) {
-		config.holiday = (config.holiday != undefined) ? !config.holiday : true
-		ctx.reply(config.holiday)
-	}
-})
-
 bot.command('status', (ctx) => {
 	ctx.replyWithChatAction('typing')
 	Chat.countDocuments({}, (err, c) => {
 		Chat.countDocuments({ $or: [{ subMenu: true }, { subLesto: true }] }, (err, not_c) => {
-			return ctx.replyWithMarkdown(`Il bot ha attualmente \`${c}\` utenti, \`${not_c}\` hanno le notifiche attive\nPeriodo di vacanza: *${(config.holiday || 'non attivo')}*\n${getLastOperaUpdateTime()}`)
+			return ctx.replyWithMarkdown(`Il bot ha attualmente \`${c}\` utenti, \`${not_c}\` hanno le notifiche attive\n${getLastOperaUpdateTime()}`)
 		})
 	})
 })
@@ -225,7 +208,7 @@ bot.command('say', (ctx) => {
 					telegram.sendMessage(element.chatId, msg.replace('/say', ''), null)
 				}, this)
 			} else {
-				return ctx.reply('errore')
+				return ctx.reply('La query al database non ha funzionato!')
 			}
 		})
 	}
@@ -290,12 +273,9 @@ var notifiche = schedule.scheduleJob('30 9 * * *', function () {
 		}
 		if (chats) {
 			chats.forEach((chat) => {
-				if (moment().weekday() > 5 && !(chat.weekend))
-					return
-				if (chat.subLesto)
-					serveMenu(null, chat.chatId, 'lesto')
-				if (chat.subMenu)
-					serveMenu(null, chat.chatId, 'intero')
+				if (moment().weekday() > 5 && !(chat.weekend)) return
+				if (chat.subLesto) serveMenu(null, chat.chatId, 'lesto')
+				if (chat.subMenu) serveMenu(null, chat.chatId, 'intero')
 			})
 		}
 	})

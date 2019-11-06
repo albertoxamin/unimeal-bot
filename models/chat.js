@@ -1,21 +1,21 @@
-var mongoose = require('mongoose');
+var mongoose = require('mongoose')
 
-var Schema = mongoose.Schema;
-var ObjectId = Schema.ObjectId;
+var Schema = mongoose.Schema
+var ObjectId = Schema.ObjectId
 
 var Chat = new Schema({
-    chatId: {type:String,unique:true},
-    name: String,
-    subLesto : Boolean,
-	subMenu : Boolean,
-	weekend : Boolean,
-    serviceMessages:[ObjectId],
-    isBotBlocked: Boolean,
-    stopSticker: Boolean
-});
+	chatId: { type: String, unique: true },
+	name: String,
+	subLesto: Boolean,
+	subMenu: Boolean,
+	weekend: Boolean,
+	serviceMessages: [ObjectId],
+	isBotBlocked: Boolean,
+	stopSticker: Boolean
+})
 
 Chat.methods = {
 
-};
+}
 
-mongoose.model('Chat', Chat, 'chats');
+mongoose.model('Chat', Chat, 'chats')
